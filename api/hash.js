@@ -5,7 +5,7 @@ var hash = {};
 var keySize = 256;
 var iterations = 100;
 
-hash.encrypt = function (data) {
+hash.encrypt = (data) => {
     var salt = CryptoJS.lib.WordArray.random(128 / 8);
 
     var key = CryptoJS.PBKDF2(process.env.HASH_SECRET, salt, {
@@ -25,7 +25,7 @@ hash.encrypt = function (data) {
     return transitmessage;
 };
 
-hash.descrypt = function (data) {
+hash.descrypt = (data) => {
     var salt = CryptoJS.enc.Hex.parse(data.substr(0, 32));
     var iv = CryptoJS.enc.Hex.parse(data.substr(32, 32));
     var encrypted = data.substring(64);
