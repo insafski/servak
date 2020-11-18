@@ -450,6 +450,11 @@ is-regex@^1.0.3:
   dependencies:
     has-symbols "^1.0.1"
 
+jose@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-3.0.2.tgz#4281fb9b3c5cbb9cf3b39e38f27c9fa84ea03a05"
+  integrity sha512-0qevGEmPIwQXAHJ7bfSyWkJBkQ7TgmhJA4R0RCLX2DCi5cb23Txzvd9LwbV+5NPHHSi4EHlTU6+oyr/A6F5wmg==
+
 js-stringify@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/js-stringify/-/js-stringify-1.0.2.tgz#1736fddfd9724f28a3682adc6230ae7e4e9679db"

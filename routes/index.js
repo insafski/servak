@@ -1,11 +1,16 @@
 var express = require("express");
 var authApi = require("../api/auth");
 var hash = require("../api/hash");
+var jwt = require("../api/jwt");
 
 var router = express.Router();
 
 /* GET home page. */
-router.get("/", (req, res, next) => res.json({}));
+router.get("/auth", (req, res, next) => {
+    jwt().then((token) => {
+        res.json({ token });
+    });
+});
 
 //BASE AUTHORISATION
 router.post("/signin", (req, res) => {
