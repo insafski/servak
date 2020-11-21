@@ -54,7 +54,7 @@ app.use(function (err, req, res, next) {
 
     // render the error page
     res.status(err.status || 500);
-    res.json({ error: "Api is not found, plese, write to horse" });
+    res.json({ error: "Some server error, plese, write to horse" });
 });
 
 module.exports = app;
