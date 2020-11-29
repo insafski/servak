@@ -1,15 +1,6 @@
-const responseMaker = (
-    res,
-    status = 200,
-    title = "",
-    message = "",
-    params = {}
-) => {
-    return res.status(status).json({
-        title,
-        message,
-        params,
-    });
-};
+const responseMaker = require("./response");
+const hash = require("./hash");
+const jwt = require("./jwt");
+const mailer = require("./mailer");
 
-module.exports = { responseMaker };
+module.exports = { responseMaker, hash, jwt, mailer };

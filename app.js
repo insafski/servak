@@ -1,17 +1,18 @@
-var createError = require("http-errors");
-var express = require("express");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-var cors = require("cors");
-var session = require("express-session");
-
 require("dotenv").config();
 
-var indexRouter = require("./routes/index");
+const createError = require("http-errors");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+const cors = require("cors");
+const session = require("express-session");
 
-var app = express();
+const { COOKIES_SECRET } = require("./configs/envs");
+const indexRouter = require("./routes/index");
 
-var corrsOptions = {
+const app = express();
+
+const corrsOptions = {
     methods: ["GET", "POST", "PUT", "DELETE"],
     origin:
         process.env.NODE_ENV === "production" ? "" : "http://localhost:8000",
@@ -23,7 +24,7 @@ app.use(logger("dev"));
 app.use(
     session({
         key: "user_sid",
-        secret: process.env.COOKIES_SECRET,
+        secret: COOKIES_SECRET,
         resave: false,
         saveUninitialized: true,
         cookie: {

@@ -1,14 +1,16 @@
-var { default: parseJwk } = require("jose/jwk/parse");
-var { default: SignJWT } = require("jose/jwt/sign");
+const { default: parseJwk } = require("jose/jwk/parse");
+const { default: SignJWT } = require("jose/jwt/sign");
 
-var jwt = async function () {
+const { JWT_SECRET_D, JWT_SECRET_X, JWT_SECRET_Y } = require("../configs/envs");
+
+const jwt = async (user) => {
     const t = await parseJwk({
         alg: "ES256",
         crv: "P-256",
         kty: "EC",
-        d: "VhsfgSRKcvHCGpLyygMbO_YpXc7bVKwi12KQTE4yOR4",
-        x: "ySK38C1jBdLwDsNWKzzBHqKYEE5Cgv-qjWvorUXk9fw",
-        y: "_LeQBw07cf5t57Iavn4j-BqJsAD1dpoz8gokd3sBsOo",
+        d: JWT_SECRET_D,
+        x: JWT_SECRET_X,
+        y: JWT_SECRET_Y,
     });
 
     return await new SignJWT({ "urn:example:claim": true })
@@ -17,7 +19,7 @@ var jwt = async function () {
         // .setIssuer("urn:example:issuer")
         // .setAudience("urn:example:audience")
         .setSubject({
-            user: 12,
+            user,
         })
         .setExpirationTime("2h")
         .sign(t);

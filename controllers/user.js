@@ -1,10 +1,10 @@
-const { Op } = require("sequelize");
+const { get } = require("lodash");
 
-const hash = require("../api/hash");
-const jwt = require("../api/jwt");
-const { User } = require("../database/models");
+const { User, sequelize } = require("../database/models");
+const { responseMaker, hash, jwt, mailer } = require("../utils");
+const { MAILER_INFO, SITE_URL } = require("../configs/envs");
 
-const { responseMaker } = require("../utils");
+// const transaction = sequelize.transaction();
 
 module.exports = {
     create(req, res) {
@@ -55,25 +55,59 @@ module.exports = {
                 login: login || null,
                 email: email || null,
                 password,
+                settings: {
+                    secret: "",
+                },
             };
-            User.create(newUser)
-                .then((user) =>
-                    responseMaker(
-                        res,
-                        200,
-                        "Регистрация",
-                        "Пользователь успешно создан",
-                        { user }
-                    )
-                )
-                .catch(() =>
-                    responseMaker(
+
+            //TODO: finish transaction & add secret generating
+
+            User.create(
+                newUser
+                // transaction
+            )
+                .then((user) => {
+                    const secretCode = "secretcode";
+                    const verifyLink = `${SITE_URL}/auth/verification/${user.id}/${password}`;
+
+                    const messageSubject = {
+                        from: MAILER_INFO.user,
+                        to: email,
+                        subject: "Confirm account ✔",
+                        text: `Вы зарегистрировались на сайте ХХХ, чтобы закончить регистрацию вам необходимо перейти по ссылке ${verifyLink}`,
+                        html: "",
+                    };
+
+                    mailer(messageSubject)
+                        .then((info) => {
+                            // transaction.commit();
+                            return responseMaker(
+                                res,
+                                200,
+                                "Регистрация",
+                                "Пользователь успешно создан",
+                                { user }
+                            );
+                        })
+                        .catch((error) => {
+                            // transaction.rollback();
+                            return responseMaker(
+                                res,
+                                400,
+                                "Регистрация",
+                                "Ошибка при создании пользователя",
+                                { error }
+                            );
+                        });
+                })
+                .catch(() => {
+                    return responseMaker(
                         res,
                         400,
                         "Регистрация",
                         "Ошибка при создании пользователя"
-                    )
-                );
+                    );
+                });
         }
     },
 
@@ -82,9 +116,9 @@ module.exports = {
 
         if (login) {
             return User.findOne({
-                where: { login },
+                where: { login, status: "active" },
             })
-                .then(tt)
+                .then(getJwt)
                 .catch(() => {
                     responseMaker(
                         res,
@@ -101,7 +135,7 @@ module.exports = {
             return User.findOne({
                 where: { email },
             })
-                .then(tt)
+                .then(getJwt)
                 .catch(() => {
                     responseMaker(
                         res,
@@ -114,7 +148,7 @@ module.exports = {
                 });
         }
 
-        function tt(data) {
+        function getJwt(data) {
             const isPasswordSame = hash.descrypt(data.password) === password;
 
             if (isPasswordSame) {
@@ -168,7 +202,12 @@ module.exports = {
     },
 
     update(req, res) {
-        const { userId, ...params } = req.body;
+        const { userId, ...rest } = req.body;
+
+        delete rest.status;
+        delete rest.password;
+
+        const params = rest;
         return User.update(
             {
                 ...params,
@@ -196,43 +235,53 @@ module.exports = {
     },
 
     delete(req, res) {
-        const { login } = req.body;
+        const { email } = req.body;
 
-        return User.update(
-            {
-                deletedAt: new Date(),
-                status: "deleted",
-            },
-            {
-                where: {
-                    login,
+        if (login) {
+            return User.update(
+                {
+                    deletedAt: new Date(),
+                    status: "deleted",
                 },
-            }
-        )
-            .then(() => {
-                responseMaker(
-                    res,
-                    200,
-                    "Удаление пользователя",
-                    "Удаление прошло успешно"
-                );
-            })
-            .catch(() => {
-                responseMaker(
-                    res,
-                    400,
-                    "Удаление пользователя",
-                    "Ошибка сервера БД"
-                );
-            });
+                {
+                    where: {
+                        email,
+                    },
+                }
+            )
+                .then(() => {
+                    responseMaker(
+                        res,
+                        200,
+                        "Удаление пользователя",
+                        "Удаление прошло успешно"
+                    );
+                })
+                .catch(() => {
+                    responseMaker(
+                        res,
+                        400,
+                        "Удаление пользователя",
+                        "Ошибка сервера БД"
+                    );
+                });
+        } else {
+            responseMaker(
+                res,
+                400,
+                "Удаление пользователя",
+                "Не верные параметры запроса",
+                { ...req.body }
+            );
+        }
     },
 
-    verify(req, res) {
+    confirmEmail(req, res) {
         const { userId, secretCode } = req.params;
 
         return User.findByPk(userId)
             .then((data) => {
-                if (data.secret === secretCode) {
+                if (get(data, "password", "") === secretCode) {
                     User.update(
                         { status: "active" },
                         {
@@ -257,10 +306,18 @@ module.exports = {
                                 "Ошибка при обновлении данных верификации"
                             );
                         });
+                } else {
+                    responseMaker(
+                        res,
+                        400,
+                        "Верификация",
+                        "Что то пошло не так",
+                        { data }
+                    );
                 }
             })
             .catch(() =>
-                esponseMaker(res, 400, "Верификация", `Пользователь не найден`)
+                responseMaker(res, 400, "Верификация", `Пользователь не найден`)
             );
     },
 };
