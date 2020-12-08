@@ -19,7 +19,9 @@ const jwt = async (user) => {
         // .setIssuer("urn:example:issuer")
         // .setAudience("urn:example:audience")
         .setSubject({
-            user,
+            user: {
+                role: user.role,
+            },
         })
         .setExpirationTime("2h")
         .sign(t);

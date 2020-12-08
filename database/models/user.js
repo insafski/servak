@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
             password: DataTypes.TEXT,
             deletedAt: DataTypes.DATE,
             status: DataTypes.TEXT,
+            secret: DataTypes.TEXT,
         },
         {
             sequelize,

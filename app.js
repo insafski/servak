@@ -6,9 +6,12 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
 const session = require("express-session");
+const CronJob = require("cron").CronJob;
 
 const { COOKIES_SECRET } = require("./configs/envs");
 const indexRouter = require("./routes/index");
+const { User } = require("./database/models");
+const { Op } = require("sequelize");
 
 const app = express();
 
@@ -57,5 +60,19 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.json({ error: "Some server error, plese, write to horse" });
 });
+
+const job = new CronJob("0 */5 * * * *", function () {
+    const now = new Date();
+
+    User.destroy({
+        where: {
+            status: "pending",
+            createdAt: {
+                [Op.lte]: new Date(new Date() - 10000 * 60),
+            },
+        },
+    });
+});
+job.start();
 
 module.exports = app;
