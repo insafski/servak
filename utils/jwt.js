@@ -21,6 +21,7 @@ const jwt = async (user) => {
         .setSubject({
             user: {
                 role: user.role,
+                status: user.status,
             },
         })
         .setExpirationTime("2h")

@@ -52,7 +52,7 @@ module.exports = {
                 .then(() =>
                     responseMaker(
                         res,
-                        200,
+                        409,
                         "Проверка параметров регистрации",
                         "Пользователь с таким логином уже существует"
                     )
@@ -60,7 +60,7 @@ module.exports = {
                 .catch(() =>
                     responseMaker(
                         res,
-                        404,
+                        200,
                         "Проверка параметров регистрации",
                         "Логин свободный"
                     )
@@ -72,7 +72,7 @@ module.exports = {
                 .then(() =>
                     responseMaker(
                         res,
-                        200,
+                        409,
                         "Проверка параметров регистрации",
                         "Пользователь с таким email уже существует"
                     )
@@ -80,19 +80,13 @@ module.exports = {
                 .catch(() =>
                     responseMaker(
                         res,
-                        404,
+                        200,
                         "Проверка параметров регистрации",
                         "Email свободный"
                     )
                 );
         } else {
-            responseMaker(
-                res,
-                404,
-                "Проверка параметров регистрации",
-                "Не правильные параметры запроса",
-                { ...req.body }
-            );
+            responseMaker(res, 204);
         }
     },
 
@@ -111,12 +105,7 @@ module.exports = {
                 .then(sendMessage)
                 .catch(createUser);
         } else {
-            responseMaker(
-                res,
-                400,
-                "Регистрация",
-                "Логин или Email или пароль отсутствует"
-            );
+            responseMaker(res, 204);
         }
 
         function sendMessage(user) {
@@ -124,22 +113,22 @@ module.exports = {
             if (status === "pending") {
                 responseMaker(
                     res,
-                    400,
+                    422,
                     "Регистрация",
                     "Пользователь уже существует. Необходимо подтвердить учетную запись"
                 );
             } else if (status === "deleted") {
                 responseMaker(
                     res,
-                    400,
+                    410,
                     "Регистрация",
-                    "Восстановить раннее созданную учетную запись?",
+                    "Пользователь удален. Восстановить раннее созданную учетную запись?",
                     { email }
                 );
             } else {
                 responseMaker(
                     res,
-                    400,
+                    409,
                     "Регистрация",
                     `${(login && "Логин") || (email && "Email")} уже существует`
                 );
@@ -196,8 +185,7 @@ module.exports = {
                                     res,
                                     400,
                                     "Регистрация",
-                                    "Ошибка при создании пользователя",
-                                    { error }
+                                    "Ошибка при создании пользователя"
                                 );
                             });
                     },
@@ -206,7 +194,7 @@ module.exports = {
                             res,
                             400,
                             "Регистрация",
-                            "Ошибка при соsздании пользователя"
+                            "Ошибка при создании пользователя"
                         );
                     }
                 )
@@ -230,14 +218,7 @@ module.exports = {
         const { login = null, email = null, password } = req.body;
 
         if ((!password && !login) || (!password && !email)) {
-            responseMaker(
-                res,
-                200,
-                "Авторизация",
-                `${
-                    (login && "Логин") || (email && "Email") || "Логин"
-                } или пароль отсутствует`
-            );
+            responseMaker(res, 204);
         } else if (login) {
             return User.findOne({
                 where: { login },
@@ -246,7 +227,7 @@ module.exports = {
                 .catch(() => {
                     responseMaker(
                         res,
-                        200,
+                        409,
                         "Авторизация",
                         `Не правильный ${
                             (login && "логин") || (email && "еmail")
@@ -261,7 +242,7 @@ module.exports = {
                 .catch(() => {
                     responseMaker(
                         res,
-                        200,
+                        409,
                         "Авторизация",
                         `Не правильный ${
                             (login && "логин") || (email && "еmail")
@@ -269,56 +250,40 @@ module.exports = {
                     );
                 });
         } else {
-            responseMaker(
-                res,
-                404,
-                "Авторизация",
-                "Не правильные параметры запроса",
-                { ...req.body }
-            );
+            responseMaker(res, 204);
         }
 
         function getJwt(user) {
-            if (user.status === "pending") {
+            const isPasswordSame = hash.descrypt(user.password) === password;
+
+            if (isPasswordSame) {
+                jwt(user)
+                    .then((token) => {
+                        responseMaker(
+                            res,
+                            200,
+                            "Авторизация",
+                            "Авторизая прошла успешно",
+                            { token }
+                        );
+                    })
+                    .catch(() => {
+                        responseMaker(
+                            res,
+                            400,
+                            "Авторизация",
+                            "Ошибка сервера"
+                        );
+                    });
+            } else {
                 responseMaker(
                     res,
-                    400,
+                    409,
                     "Авторизация",
-                    "Необходимо подтвердить учетную запись"
+                    `Не правильный ${
+                        (login && "логин") || (email && "еmail")
+                    } или пароль`
                 );
-            } else {
-                const isPasswordSame =
-                    hash.descrypt(user.password) === password;
-
-                if (isPasswordSame) {
-                    jwt(user)
-                        .then((token) => {
-                            responseMaker(
-                                res,
-                                200,
-                                "Авторизация",
-                                "Авторизая прошла успешно",
-                                { token }
-                            );
-                        })
-                        .catch(() => {
-                            responseMaker(
-                                res,
-                                400,
-                                "Авторизация",
-                                "Ошибка при генерации токена"
-                            );
-                        });
-                } else {
-                    responseMaker(
-                        res,
-                        200,
-                        "Авторизация",
-                        `Не правильный ${
-                            (login && "логин") || (email && "еmail")
-                        } или пароль`
-                    );
-                }
             }
         }
     },
@@ -448,17 +413,11 @@ module.exports = {
                         res,
                         400,
                         "Удаление пользователя",
-                        "Ошибка сервера БД"
+                        "Ошибка сервера"
                     );
                 });
         } else {
-            responseMaker(
-                res,
-                400,
-                "Удаление пользователя",
-                "Не верные параметры запроса",
-                { ...req.body }
-            );
+            responseMaker(res, 204);
         }
     },
 
