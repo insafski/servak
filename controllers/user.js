@@ -42,49 +42,49 @@ module.exports = {
      * @param {*} req
      * @param {*} res
      */
-    checkSignUpParams(req, res) {
+    async checkSignUpParams(req, res) {
         const { login = null, email = null } = req.body;
 
+        const errorMessages = [];
+        const successMessages = [];
+
         if (login) {
-            User.findOne({
+            await User.findOne({
                 where: { login },
             })
-                .then(() =>
-                    responseMaker(
-                        res,
-                        409,
-                        "Проверка параметров регистрации",
-                        "Пользователь с таким логином уже существует"
-                    )
-                )
-                .catch(() =>
-                    responseMaker(
-                        res,
-                        200,
-                        "Проверка параметров регистрации",
-                        "Логин свободный"
-                    )
-                );
-        } else if (email) {
-            return User.findOne({
+                .then((user) => {
+                    if (user) {
+                        errorMessages.push(
+                            "Пользователь с таким логином уже существует"
+                        );
+                    } else {
+                        successMessages.push("Логин свободный");
+                    }
+                })
+                .catch(() => errorMessages.push("Не удалось проверить логин"));
+        }
+
+        if (email) {
+            await User.findOne({
                 where: { email },
             })
-                .then(() =>
-                    responseMaker(
-                        res,
-                        409,
-                        "Проверка параметров регистрации",
-                        "Пользователь с таким email уже существует"
-                    )
-                )
-                .catch(() =>
-                    responseMaker(
-                        res,
-                        200,
-                        "Проверка параметров регистрации",
-                        "Email свободный"
-                    )
-                );
+                .then((user) => {
+                    if (user) {
+                        errorMessages.push(
+                            "Пользователь с таким email уже существует"
+                        );
+                    } else {
+                        successMessages.push("Email свободный");
+                    }
+                })
+                .catch(() => errorMessages.push("Не удалось проверить email"));
+        }
+
+        if (errorMessages.length || successMessages.length) {
+            responseMaker(res, 200, "Проверка параметров регистрации", null, {
+                errorMessages,
+                successMessages,
+            });
         } else {
             responseMaker(res, 204);
         }
