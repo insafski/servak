@@ -95,7 +95,7 @@ module.exports = {
      * @param {*} req
      * @param {*} res
      */
-    create(req, res) {
+    async create(req, res) {
         const { login, email, password: simplePasseord } = req.body;
 
         if (login && email && simplePasseord) {
@@ -135,7 +135,7 @@ module.exports = {
             }
         }
 
-        function createUser() {
+        async function createUser() {
             const password = hash.encrypt(simplePasseord);
             const secret =
                 Math.floor(
@@ -150,62 +150,51 @@ module.exports = {
             };
 
             //TODO: finish transaction
-            User.create(
-                newUser
-                // transaction
-            )
-                .then(
-                    (user) => {
-                        const verifyLink = `${SITE_URL}/auth/confirmEmail/${user.id}/${user.secret}`;
+            const t = await sequelize.transaction();
+            const user = await User.create(newUser, { transaction: t });
 
-                        const messageSubject = {
-                            from: MAILER_INFO.user,
-                            to: email,
-                            subject: "Confirm account ✔",
-                            text: `Вы зарегистрировались на сайте ${SITE_URL}, чтобы закончить регистрацию вам необходимо перейти по ссылке ${verifyLink}`,
-                            html: "",
-                        };
+            try {
+                const verifyLink = `${SITE_URL}/auth/confirmEmail/${user.id}/${user.secret}`;
 
-                        mailer(messageSubject)
-                            .then(() => {
-                                // transaction.commit();
-                                return responseMaker(
-                                    res,
-                                    200,
-                                    "Регистрация",
-                                    "Пользователь успешно создан",
-                                    {
-                                        user: getUserFields(user),
-                                    }
-                                );
-                            })
-                            .catch((error) => {
-                                // transaction.rollback();
-                                return responseMaker(
-                                    res,
-                                    400,
-                                    "Регистрация",
-                                    "Ошибка при создании пользователя"
-                                );
-                            });
-                    },
-                    () => {
+                const messageSubject = {
+                    from: MAILER_INFO.user,
+                    to: email,
+                    subject: "Confirm account ✔",
+                    text: `Вы зарегистрировались на сайте ${SITE_URL}, чтобы закончить регистрацию вам необходимо перейти по ссылке ${verifyLink}`,
+                    html: "",
+                };
+
+                mailer(messageSubject)
+                    .then(() => {
+                        t.commit();
+                        return responseMaker(
+                            res,
+                            200,
+                            "Регистрация",
+                            "Пользователь успешно создан",
+                            {
+                                user: getUserFields(user),
+                            }
+                        );
+                    })
+                    .catch(() => {
+                        t.rollback();
                         return responseMaker(
                             res,
                             400,
                             "Регистрация",
-                            "Ошибка при создании пользователя"
+                            "Ошибка при отравке почты. Пользователь не создан"
                         );
-                    }
-                )
-                .catch(() => {
-                    return responseMaker(
-                        res,
-                        400,
-                        "Регистрация",
-                        "Ошибка при создании пользователя"
-                    );
-                });
+                    });
+            } catch (error) {
+                t.rollback();
+                return responseMaker(
+                    res,
+                    400,
+                    "Регистрация",
+                    "Ошибка при создании пользователя"
+                );
+            }
         }
     },
 
