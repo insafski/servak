@@ -19,8 +19,10 @@ const app = express();
 const corrsOptions = {
     methods: ["GET", "POST", "PUT", "DELETE"],
     origin:
-        process.env.NODE_ENV === "production" ? "" : "http://localhost:8000",
+        process.env.NODE_ENV === "production" ? "*" : "http://localhost:8000",
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
 };
 
 app.use(logger("dev"));
