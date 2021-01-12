@@ -19,7 +19,9 @@ const app = express();
 const corrsOptions = {
     methods: ["GET", "POST", "PUT", "DELETE"],
     origin:
-        process.env.NODE_ENV === "production" ? "*" : "http://localhost:8000",
+        process.env.NODE_ENV === "production"
+            ? "https://loftstylelife.ru"
+            : "http://localhost:3000",
     credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -29,6 +31,7 @@ app.use(logger("dev"));
 
 app.use(
     session({
+        name: "_loft_session",
         key: "user_sid",
         secret: COOKIES_SECRET,
         resave: false,
