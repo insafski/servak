@@ -9,7 +9,8 @@ const session = require("express-session");
 const CronJob = require("cron").CronJob;
 
 const { COOKIES_SECRET } = require("./configs/envs");
-const indexRouter = require("./routes/index");
+const user = require("./routes/user");
+const loft = require("./routes/loft");
 const { User, sequelize } = require("./database/models");
 const { Op } = require("sequelize");
 
@@ -43,7 +44,8 @@ app.use(cookieParser());
 
 app.use(cors(corrsOptions));
 
-app.use("/", indexRouter);
+app.use("/", user);
+app.use("/loft/", loft);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

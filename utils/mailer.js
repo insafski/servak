@@ -5,6 +5,7 @@ const { MAILER_INFO } = require("../configs/envs");
 const mailer = (mailSubject) => {
     return new Promise((resolve, reject) => {
         const transporter = nodemailer.createTransport({
+            pool: true,
             service: "gmail",
             host: "smtp.gmail.com",
             port: 465,
