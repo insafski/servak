@@ -27,8 +27,6 @@ const corrsOptions = {
 
 app.use(logger("dev"));
 
-const expiryDate = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
 app.use(
     session({
         key: "user_sid",
@@ -38,9 +36,9 @@ app.use(
         cookie: {
             secure: true,
             httpOnly: true,
-            domain: "example.com",
-            path: "foo/bar",
-            expires: expiryDate,
+            domain: "loftstylelife.ru",
+            expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour,
+            sameSite: true,
         },
     })
 );
