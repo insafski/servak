@@ -27,6 +27,8 @@ const corrsOptions = {
 
 app.use(logger("dev"));
 
+const expiryDate = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
 app.use(
     session({
         key: "user_sid",
@@ -34,7 +36,11 @@ app.use(
         resave: false,
         saveUninitialized: true,
         cookie: {
-            expires: 600000,
+            secure: true,
+            httpOnly: true,
+            domain: "example.com",
+            path: "foo/bar",
+            expires: expiryDate,
         },
     })
 );
