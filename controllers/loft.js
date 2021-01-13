@@ -1,5 +1,5 @@
 const { Loft } = require("../database/models");
-const { responseMaker } = require("../utils");
+const { responseMaker, telegramBot } = require("../utils");
 
 module.exports = {
     /**
@@ -18,6 +18,8 @@ module.exports = {
             name,
             phone,
         });
+
+        telegramBot(`Имя: <b>${name}</b>\nТелефон: <b>${phone}</b>`);
 
         if (newLoftOrder.id) {
             return responseMaker(
