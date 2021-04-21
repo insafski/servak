@@ -1,19 +1,19 @@
 const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-    class Loft extends Model {
+    class Logs extends Model {
         static associate(models) {}
     }
     
-    Loft.init(
+    Logs.init(
         {
-            name: DataTypes.TEXT,
-            phone: DataTypes.TEXT,
+            prev_data: DataTypes.JSONB,
+            new_data: DataTypes.JSONB,
         },
         {
             sequelize,
-            modelName: "Loft",
+            modelName: "logs",
         }
     );
-    return Loft;
+    return Logs;
 };

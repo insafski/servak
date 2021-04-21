@@ -11,6 +11,7 @@ const CronJob = require("cron").CronJob;
 const { COOKIES_SECRET } = require("./configs/envs");
 const user = require("./routes/user");
 const loft = require("./routes/loft");
+const log = require("./routes/log");
 const { User, sequelize } = require("./database/models");
 const { Op } = require("sequelize");
 
@@ -55,6 +56,7 @@ app.use(cors(corrsOptions));
 
 app.use("/", user);
 app.use("/loft/", loft);
+app.use("/log-globals", log);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -72,25 +74,25 @@ app.use(function (err, req, res, next) {
     res.json({ error: "Some server error, plese, write to horse" });
 });
 
-const job = new CronJob("0 */1 * * * *", async function () {
-    try {
-        await sequelize.transaction(async (t) => {
-            await User.destroy(
-                {
-                    where: {
-                        status: "pending",
-                        createdAt: {
-                            [Op.lte]: new Date(new Date() - 10000 * 60),
-                        },
-                    },
-                },
-                { transaction: t }
-            );
-        });
-    } catch (error) {
-        console.log("Unconfirmed user delete: ", error);
-    }
-});
-job.start();
+// const job = new CronJob("0 */1 * * * *", async function () {
+//     try {
+//         await sequelize.transaction(async (t) => {
+//             await User.destroy(
+//                 {
+//                     where: {
+//                         status: "pending",
+//                         createdAt: {
+//                             [Op.lte]: new Date(new Date() - 10000 * 60),
+//                         },
+//                     },
+//                 },
+//                 { transaction: t }
+//             );
+//         });
+//     } catch (error) {
+//         console.log("Unconfirmed user delete: ", error);
+//     }
+// });
+// job.start();
 
 module.exports = app;

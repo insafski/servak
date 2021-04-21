@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
     up: async (queryInterface, Sequelize) => {
-        await queryInterface.createTable("lofts", {
+        await queryInterface.createTable("manufacturers", {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -11,7 +11,6 @@ module.exports = {
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,
-                defaultValue: Sequelize.NOW,
             },
             updatedAt: {
                 allowNull: false,
@@ -21,18 +20,30 @@ module.exports = {
             deletedAt: {
                 allowNull: true,
                 type: Sequelize.DATE,
+                defaultValue: Sequelize.NOW,
             },
-            name: {
+            status: {
                 allowNull: false,
-                type: Sequelize.TEXT,
+                type: Sequelize.JSONB,
             },
-            phone: {
+            heading: {
                 allowNull: false,
-                type: Sequelize.TEXT,
+                type: Sequelize.JSONB,
+            },
+            slug: {
+                allowNull: false,
+                type: Sequelize.STRING,
+            },
+            picture: {
+                allowNull: false,
+                type: Sequelize.JSONB,
+            },
+            seo: {
+                type: Sequelize.JSONB,
             },
         });
     },
-    down: async (queryInterface) => {
-        await queryInterface.dropTable("lofts");
-    },
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.dropTable("manufacturers");
+    }
 };
